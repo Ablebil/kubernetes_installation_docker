@@ -112,7 +112,7 @@
         helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
         helm repo update
 
-        WORKER_NODE=$(kubectl get nodes | grep -v master | grep -v control | head -1 | awk '{print $1}')
+        WORKER_NODE=$(kubectl get nodes --no-headers | grep -v master | grep -v control | head -1 | awk '{print $1}')
 
         helm install ingress-nginx ingress-nginx/ingress-nginx \
           --namespace ingress-nginx \
