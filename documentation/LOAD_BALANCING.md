@@ -2,7 +2,7 @@
 
 Dokumentasi ini menjelaskan langkah-langkah untuk memvisualisasikan dan menguji distribusi trafik (_Load Balancing_) pada aplikasi `login-app` yang berjalan di atas Kubernetes.
 
-> **Catatan:** Konfigurasi _Sticky Sessions_ (Session Affinity), pendefinisian _Ingress Class_, serta penyesuaian jumlah _replicas_ menjadi 3 Pod **sudah diatur dan dieksekusi secara otomatis** pada fase _deployment_ sebelumnya.
+> **Catatan:** Konfigurasi _Sticky Sessions_ (Session Affinity), pendefinisian _Ingress Class_, serta penyesuaian jumlah _replicas_ menjadi 3 Pod **sudah diatur dan dieksekusi** pada fase _deployment_ sebelumnya.
 
 ---
 
@@ -40,10 +40,10 @@ fetch('/server-info')
 
 Karena aplikasi telah dikonfigurasi menggunakan _Sticky Sessions_ untuk menjaga data _login_, pengujian manual via _refresh browser_ akan selalu diarahkan ke Pod yang sama. 
 
-Untuk menyimulasikan trafik dari banyak pengguna secara akurat dan membuktikan _Load Balancer_ tetap bekerja, buat _file script_ pengujian `test-lb.sh` di Master Node:
+Untuk menyimulasikan trafik dari banyak pengguna secara akurat dan membuktikan _Load Balancer_ tetap bekerja, buat _file script_ pengujian `lb-test.sh` di Master Node:
 
 ```bash
-nano test-lb.sh
+nano lb-test.sh
 ```
 
 Masukkan _script_ Bash berikut:
@@ -84,8 +84,8 @@ echo -e "\nTesting Completed!"
 Beri hak akses eksekusi pada _script_ dan jalankan perintah pengujian:
 
 ```bash
-chmod +x test-lb.sh
-./test-lb.sh
+chmod +x lb-test.sh
+./lb-test.sh
 ```
 
 ### **Analisis Hasil Output:**
