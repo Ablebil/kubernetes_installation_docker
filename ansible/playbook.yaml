@@ -1,0 +1,158 @@
+- name: Setup Application and Build Docker Image
+  hosts: all
+  become: false
+  vars:
+    git_repo: "https://github.com/Ablebil/kubernetes_installation_docker.git"
+    git_branch: master
+    app_dir: "/home/dev/k8s-login-app-deployment"
+
+  tasks:
+    - name: Create app directory if it doesn't exist
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+
+    - name: Clone git repository
+      git:
+        repo: "{{ git_repo }}"
+        dest: "{{ app_dir }}"
+        version: "{{ git_branch }}"
+        clone: yes
+        update: yes
+
+    - name: Create data directory on worker nodes
+      become: true
+      file:
+        path: /mnt/data
+        state: directory
+        mode: "0777"
+      when: inventory_hostname in groups['workers']
+
+    - name: Create server-patch.js file
+      copy:
+        content: |
+          const os = require('os');
+          const serverInfo = {
+            hostname: os.hostname(),
+            podName: process.env.POD_NAME || 'unknown',
+            nodeName: process.env.NODE_NAME || 'unknown'
+          };
+
+          // Add this after the health route
+          app.get('/server-info', (req, res) => {
+            res.json(serverInfo);
+          });
+
+          // Insert this line before app.listen
+          app.use((req, res, next) => {
+            res.setHeader('X-Served-By', serverInfo.podName);
+            next();
+          });
+        dest: "{{ app_dir }}/k8s-login-app/app/server-patch.js"
+
+    - name: Apply server patch and Build Docker image
+      shell: |
+        cd {{ app_dir }}/k8s-login-app/app
+        cat server-patch.js >> server.js
+        docker build -t login-app:latest .
+      args:
+        executable: /bin/bash
+
+- name: Deploy Application to Kubernetes
+  hosts: master
+  become: false
+  vars:
+    app_dir: "/home/dev/k8s-login-app-deployment"
+    master_node_ip: 10.202.0.31
+
+  tasks:
+    - name: Clean up old deployments
+      shell: |
+        kubectl delete deployment login-app mysql --ignore-not-found
+        kubectl delete service login-app mysql --ignore-not-found
+        kubectl delete pvc mysql-pvc --ignore-not-found
+        kubectl delete pv mysql-pv --ignore-not-found
+        kubectl delete secret mysql-secret --ignore-not-found
+      args:
+        executable: /bin/bash
+      ignore_errors: true
+
+    - name: Deploy MySQL Database
+      shell: |
+        cd {{ app_dir }}/k8s-login-app
+        kubectl apply -f k8s/mysql-secret.yaml
+        kubectl apply -f k8s/mysql-pv.yaml
+        kubectl apply -f k8s/mysql-pvc.yaml
+        kubectl apply -f k8s/mysql-deployment.yaml
+        kubectl apply -f k8s/mysql-service.yaml
+      args:
+        executable: /bin/bash
+
+    - name: Wait for MySQL to be ready
+      shell: |
+        kubectl wait --for=condition=ready pod -l app=mysql --timeout=180s
+      args:
+        executable: /bin/bash
+      ignore_errors: true
+
+    - name: Deploy Standard Web Application
+      shell: |
+        cd {{ app_dir }}/k8s-login-app
+        kubectl apply -f k8s/web-deployment.yaml
+        kubectl apply -f k8s/web-service.yaml
+      args:
+        executable: /bin/bash
+
+    - name: Deploy Load Balancer Configuration
+      shell: |
+        cd {{ app_dir }}/k8s-login-app
+        kubectl apply -f k8s/web-deployment-lb.yaml
+        kubectl create namespace ingress-nginx --dry-run=client -o yaml | kubectl apply -f -
+
+        helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
+        helm repo update
+
+        WORKER_NODE=$(kubectl get nodes | grep -v master | grep -v control | head -1 | awk '{print $1}')
+
+        helm install ingress-nginx ingress-nginx/ingress-nginx \
+          --namespace ingress-nginx \
+          --set controller.nodeSelector."kubernetes\\.io/hostname"=$WORKER_NODE \
+          --set controller.service.type=NodePort \
+          --set controller.service.nodePorts.http=30081
+
+        kubectl apply -f k8s/login-app-ingress.yaml
+        kubectl apply -f k8s/web-service-lb.yaml
+      args:
+        executable: /bin/bash
+      ignore_errors: true
+
+    - name: Configure Calico networking for correct IP detection
+      shell: |
+        kubectl set env daemonset/calico-node -n calico-system IP_AUTODETECTION_METHOD=can-reach={{ master_node_ip }}
+        kubectl delete pod -n calico-system -l k8s-app=calico-node
+        kubectl wait --for=condition=ready pod -l k8s-app=calico-node -n calico-system --timeout=180s
+      args:
+        executable: /bin/bash
+      ignore_errors: true
+
+    - name: Restart login-app deployment for DNS fix
+      shell: |
+        kubectl rollout restart deployment login-app
+        kubectl rollout status deployment login-app --timeout=180s
+      args:
+        executable: /bin/bash
+
+    - name: Display access information
+      debug:
+        msg: |
+          Deployment completed!
+
+          Standard application access:
+          http://{{ master_node_ip }}:30080
+
+          Load balanced application access:
+          http://{{ master_node_ip }}:30081
+
+          Login credentials:
+          Username: admin
+          Password: admin123
