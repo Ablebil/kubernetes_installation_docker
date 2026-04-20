@@ -1,4 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
+
+// Menampilkan info server yang menangani request
+    fetch('/server-info')
+    .then(response => response.json())
+    .then(data => {
+        const serverInfoDiv = document.createElement('div');
+        serverInfoDiv.style.position = 'fixed';
+        serverInfoDiv.style.bottom = '10px';
+        serverInfoDiv.style.right = '10px';
+        serverInfoDiv.style.padding = '5px 10px';
+        serverInfoDiv.style.background = '#333';
+        serverInfoDiv.style.color = 'white';
+        serverInfoDiv.style.fontFamily = 'monospace';
+        serverInfoDiv.style.fontSize = '12px';
+        serverInfoDiv.style.borderRadius = '5px';
+        serverInfoDiv.style.zIndex = '9999';
+        serverInfoDiv.textContent = `Served by: ${data.podName}`;
+        document.body.appendChild(serverInfoDiv);
+    })
+    .catch(err => console.error('Error fetching server info:', err));
+    
     // Check if user is logged in
     fetch('/auth/status')
         .then(response => response.json())
