@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TARGET_URL="http://10.202.0.31:30081/server-info"
+TARGET_URL="https://pal-k8s.bccdev.id/server-info"
 
 echo "========================================================="
 echo "TESTING LOAD BALANCER WITH STICKY SESSION"
