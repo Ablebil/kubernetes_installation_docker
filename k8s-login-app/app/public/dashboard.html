@@ -1,47 +1,58 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Image Upload App</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="dashboard.css">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
     <header>
-        <div class="header-container">
-            <h1>Image Upload Dashboard</h1>
-            <div class="user-info">
-                <span id="welcome-message">Welcome, User</span>
-                <button id="logout-btn">Logout</button>
-            </div>
+      <div class="header-container">
+        <h1>Image Upload Dashboard</h1>
+        <div class="user-info">
+          <span id="welcome-message">Welcome, User</span>
+          <button id="logout-btn">Logout</button>
         </div>
+      </div>
     </header>
     <main>
-        <div class="dashboard-container">
-            <section class="upload-section">
-                <h2>Upload New Image</h2>
-                <div id="upload-message"></div>
-                <form id="uploadForm" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="image">Select an image to upload:</label>
-                        <input type="file" id="image" name="image" accept="image/*" required>
-                    </div>
-                    <div class="image-preview">
-                        <img id="preview-image" src="#" alt="Preview" style="display: none; max-width: 300px;">
-                    </div>
-                    <button type="submit">Upload Image</button>
-                </form>
-            </section>
-            
-            <section class="uploads-section">
-                <h2>Your Uploads</h2>
-                <div id="uploads-container" class="uploads-grid">
-                    <!-- Images will be loaded here -->
-                </div>
-            </section>
-        </div>
+      <div class="dashboard-container">
+        <section class="upload-section">
+          <h2>Upload New Image</h2>
+          <div id="upload-message"></div>
+          <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+              <label for="image">Select an image to upload:</label>
+              <input
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
+                required
+              />
+            </div>
+            <div class="image-preview">
+              <img
+                id="preview-image"
+                src="#"
+                alt="Preview"
+                style="display: none; max-width: 300px"
+              />
+            </div>
+            <button type="submit">Upload Image</button>
+          </form>
+        </section>
+
+        <section class="uploads-section">
+          <h2>Your Uploads</h2>
+          <div id="uploads-container" class="uploads-grid">
+            <!-- Images will be loaded here -->
+          </div>
+        </section>
+      </div>
     </main>
     <script src="dashboard.js"></script>
-</body>
+  </body>
 </html>
