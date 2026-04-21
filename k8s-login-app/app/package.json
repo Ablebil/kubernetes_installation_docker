@@ -8,6 +8,8 @@
     "mysql2": "^3.6.0",
     "body-parser": "^1.20.2",
     "multer": "^1.4.5-lts.1",
-    "express-session": "^1.17.3"
+    "express-session": "^1.17.3",
+    "prom-client": "^14.0.1",
+    "express-prom-bundle": "^6.4.1"
   }
 }
