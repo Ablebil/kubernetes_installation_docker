@@ -279,6 +279,12 @@ app.get("/auth/status", (req, res) => {
   res.json({ authenticated: false });
 });
 
+app.get("/server-info", (req, res) => {
+  res.json({
+    podName: process.env.HOSTNAME || "unknown",
+  });
+});
+
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
