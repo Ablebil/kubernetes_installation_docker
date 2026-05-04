@@ -47,6 +47,11 @@ const metricsMiddleware = promBundle({
 });
 app.use(metricsMiddleware);
 
+app.use((req, res, next) => {
+  res.set("X-Served-By", process.env.HOSTNAME || "unknown");
+  next();
+});
+
 const port = process.env.PORT || 3000;
 
 // Database configuration
